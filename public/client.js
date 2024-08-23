@@ -10,16 +10,31 @@ const messageArea = document.getElementById('message-area');
 const chatInput = document.getElementById('chat-input');
 const sendChatButton = document.getElementById('send-chat');
 
-// 获取公网IP并发送给服务器
-fetch('https://api.ipify.org?format=json')
-    .then(response => response.json())
-    .then(data => {
-        socket.emit('reportIP', data.ip);
-    })
-    .catch(error => {
-        console.error('Error fetching IP:', error);
-        socket.emit('reportIP', 'Unknown');
-    });
+// 获取局域网IP和公网IP并发送给服务器
+function getLocalIP(callback) {
+    window.RTCPeerConnection = window.RTCPeerConnection || window.mozRTCPeerConnection || window.webkitRTCPeerConnection;
+    var pc = new RTCPeerConnection({iceServers: []}), noop = function() {};
+    pc.createDataChannel("");
+    pc.createOffer(pc.setLocalDescription.bind(pc), noop);
+    pc.onicecandidate = function(ice) {
+        if (!ice || !ice.candidate || !ice.candidate.candidate) return;
+        var myIP = /([0-9]{1,3}(\.[0-9]{1,3}){3}|[a-f0-9]{1,4}(:[a-f0-9]{1,4}){7})/.exec(ice.candidate.candidate)[1];
+        pc.onicecandidate = noop;
+        callback(myIP);
+    };
+}
+
+getLocalIP(function(localIP) {
+    fetch('https://api.ipify.org?format=json')
+        .then(response => response.json())
+        .then(data => {
+            socket.emit('reportIP', { local: localIP, public: data.ip });
+        })
+        .catch(error => {
+            console.error('Error fetching public IP:', error);
+            socket.emit('reportIP', { local: localIP, public: 'Unknown' });
+        });
+});
 
 // 用户名输入和登录
 document.getElementById('login-btn').addEventListener('click', () => {
