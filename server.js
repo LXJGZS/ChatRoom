@@ -13,15 +13,14 @@ const rooms = {};
 io.on('connection', (socket) => {
     console.log('用户已连接，等待IP信息...');
 
-    socket.on('reportIP', (ips) => {
-        socket.localIP = ips.local || 'Unknown';
-        socket.publicIP = ips.public || 'Unknown';
-        console.log(`用户IP地址: 局域网 ${socket.localIP}, 公网 ${socket.publicIP}`);
+    socket.on('reportIP', (ip) => {
+        socket.publicIP = ip;
+        console.log(`用户公网IP地址: ${socket.publicIP}`);
     });
 
     socket.on('login', (username) => {
         socket.username = username;
-        console.log(`用户 ${username} 登录，IP地址: 局域网 ${socket.localIP || 'Unknown'}, 公网 ${socket.publicIP || 'Unknown'}`);
+        console.log(`用户 ${username} 登录，公网IP地址: ${socket.publicIP}`);
     });
 
     socket.on('createRoom', (room) => {
@@ -47,7 +46,7 @@ io.on('connection', (socket) => {
         socket.room = room;
         io.to(room).emit('playerJoined', { username: socket.username, players: rooms[room].players });
         socket.emit('joinedRoom', room);
-        console.log(`用户 ${socket.username} 加入房间 ${room}，IP地址: 局域网 ${socket.localIP || 'Unknown'}, 公网 ${socket.publicIP || 'Unknown'}`);
+        console.log(`用户 ${socket.username} 加入房间 ${room}，公网IP地址: ${socket.publicIP}`);
     }
 
     socket.on('chat', (data) => {
@@ -58,7 +57,7 @@ io.on('connection', (socket) => {
     });
 
     socket.on('disconnect', () => {
-        console.log(`用户已断开连接，IP地址: 局域网 ${socket.localIP || 'Unknown'}, 公网 ${socket.publicIP || 'Unknown'}`);
+        console.log(`用户已断开连接，公网IP地址: ${socket.publicIP}`);
         if (socket.room && rooms[socket.room]) {
             rooms[socket.room].players = rooms[socket.room].players.filter(player => player !== socket.username);
             io.to(socket.room).emit('playerLeft', { username: socket.username, players: rooms[socket.room].players });
