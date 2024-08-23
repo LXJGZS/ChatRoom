@@ -76,7 +76,7 @@ function sendChatMessage() {
     if (message) {
         socket.emit('chat', { room, username, message });
         chatInput.value = '';
-        addMessage(`${message}`, 'user');
+        addMessage(message, 'user');
     }
 }
 
@@ -90,18 +90,20 @@ socket.on('chat', (data) => {
 // 添加消息到聊天区域
 function addMessage(message, type) {
     const messageElement = document.createElement('div');
-    messageElement.textContent = message;
     messageElement.classList.add('message');
     
     switch(type) {
         case 'system':
             messageElement.classList.add('system-message');
+            messageElement.textContent = message;
             break;
         case 'user':
             messageElement.classList.add('user-message');
+            messageElement.textContent = `你: ${message}`;
             break;
         case 'other':
             messageElement.classList.add('other-message');
+            messageElement.textContent = message;
             break;
     }
     
