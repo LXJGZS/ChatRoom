@@ -210,7 +210,7 @@ function sendChatMessage() {
         addMessage(`${username}: ${message}`);
     }
 }
-socket) => {
+socket.on('chat', (data) => {
 });
 
 function addMessage(message) {
