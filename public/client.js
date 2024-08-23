@@ -10,30 +10,50 @@ const messageArea = document.getElementById('message-area');
 const chatInput = document.getElementById('chat-input');
 const sendChatButton = document.getElementById('send-chat');
 
-// 获取局域网IP和公网IP并发送给服务器
-function getLocalIP(callback) {
-    window.RTCPeerConnection = window.RTCPeerConnection || window.mozRTCPeerConnection || window.webkitRTCPeerConnection;
-    var pc = new RTCPeerConnection({iceServers: []}), noop = function() {};
-    pc.createDataChannel("");
-    pc.createOffer(pc.setLocalDescription.bind(pc), noop);
-    pc.onicecandidate = function(ice) {
-        if (!ice || !ice.candidate || !ice.candidate.candidate) return;
-        var myIP = /([0-9]{1,3}(\.[0-9]{1,3}){3}|[a-f0-9]{1,4}(:[a-f0-9]{1,4}){7})/.exec(ice.candidate.candidate)[1];
-        pc.onicecandidate = noop;
-        callback(myIP);
-    };
+function getIPs(callback) {
+    let ip = { local: 'Unknown', public: 'Unknown' };
+    
+    // 获取局域网IP
+    const RTCPeerConnection = window.RTCPeerConnection || window.webkitRTCPeerConnection || window.mozRTCPeerConnection;
+    if (RTCPeerConnection) {
+        const pc = new RTCPeerConnection({ iceServers: [] });
+        pc.createDataChannel("");
+        pc.createOffer().then(pc.setLocalDescription.bind(pc));
+        pc.onicecandidate = (ice) => {
+            if (!ice || !ice.candidate || !ice.candidate.candidate) return;
+            const match = /([0-9]{1,3}(\.[0-9]{1,3}){3}|[a-f0-9]{1,4}(:[a-f0-9]{1,4}){7})/.exec(ice.candidate.candidate);
+            if (match) {
+                ip.local = match[1];
+            }
+            pc.onicecandidate = null;
+            getPublicIP();
+        };
+    } else {
+        console.warn('无法获取局域网IP，RTCPeerConnection不可用');
+        getPublicIP();
+    }
+
+    // 获取公网IP
+    function getPublicIP() {
+        fetch('https://api.ipify.org?format=json')
+            .then(response => response.json())
+            .then(data => {
+                ip.public = data.ip;
+                callback(ip);
+            })
+            .catch(error => {
+                console.error('获取公网IP时出错:', error);
+                callback(ip);
+            });
+    }
 }
 
-getLocalIP(function(localIP) {
-    fetch('https://api.ipify.org?format=json')
-        .then(response => response.json())
-        .then(data => {
-            socket.emit('reportIP', { local: localIP, public: data.ip });
-        })
-        .catch(error => {
-            console.error('Error fetching public IP:', error);
-            socket.emit('reportIP', { local: localIP, public: 'Unknown' });
-        });
+// 在连接建立后获取IP并发送给服务器
+socket.on('connect', () => {
+    getIPs((ips) => {
+        console.log('获取到的IP:', ips);
+        socket.emit('reportIP', ips);
+    });
 });
 
 // 用户名输入和登录
