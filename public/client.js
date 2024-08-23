@@ -206,21 +206,19 @@ function sendChatMessage() {
     if (message) {
         socket.emit('chat', { room, username, message });
         chatInput.value = '';
-        // 立即在本地显示消息
-        addMessage(`<${username}>: ${message}`);
+        // 立即在本地显示消息，包括用户名
+        addMessage(`${username}: ${message}`);
     }
 }
 
 socket.on('chat', (data) => {
-    // 只显示来自其他用户的消息
-    if (data.username !== username) {
-        addMessage(`<${data.username}>: ${data.message}`);
-    }
+    // 显示所有消息，包括用户名
+    addMessage(`${data.username}: ${data.message}`);
 });
 
 function addMessage(message) {
     const messageElement = document.createElement('p');
-    messageElement.innerHTML = message;
+    messageElement.textContent = message; // 使用 textContent 而不是 innerHTML 以提高安全性
     messageArea.appendChild(messageElement);
     messageArea.scrollTop = messageArea.scrollHeight;
 }
