@@ -38,17 +38,17 @@ socket.on('joinedRoom', (joinedRoom) => {
     roomArea.style.display = 'none';
     chatArea.style.display = 'flex';
     roomHeader.textContent = `房间: ${room}`;
-    addMessage('系统: 你加入了房间 ' + room);
+    addMessage('你加入了房间 ' + room, 'system');
 });
 
 socket.on('playerJoined', (data) => {
-    addMessage(`系统: ${data.username} 加入了房间`);
-    addMessage(`系统: 当前用户: ${data.players.join(', ')}`);
+    addMessage(`${data.username} 加入了房间`, 'system');
+    addMessage(`当前用户: ${data.players.join(', ')}`, 'system');
 });
 
 socket.on('playerLeft', (data) => {
-    addMessage(`系统: ${data.username} 离开了房间`);
-    addMessage(`系统: 当前用户: ${data.players.join(', ')}`);
+    addMessage(`${data.username} 离开了房间`, 'system');
+    addMessage(`当前用户: ${data.players.join(', ')}`, 'system');
 });
 
 sendChatButton.addEventListener('click', sendChatMessage);
@@ -63,19 +63,33 @@ function sendChatMessage() {
     if (message) {
         socket.emit('chat', { room, username, message });
         chatInput.value = '';
-        addMessage(`${username}: ${message}`);
+        addMessage(`${message}`, 'user');
     }
 }
 
 socket.on('chat', (data) => {
     if (data.username !== username) {
-        addMessage(`${data.username}: ${data.message}`);
+        addMessage(`${data.username}: ${data.message}`, 'other');
     }
 });
 
-function addMessage(message) {
-    const messageElement = document.createElement('p');
+function addMessage(message, type) {
+    const messageElement = document.createElement('div');
     messageElement.textContent = message;
+    messageElement.classList.add('message');
+    
+    switch(type) {
+        case 'system':
+            messageElement.classList.add('system-message');
+            break;
+        case 'user':
+            messageElement.classList.add('user-message');
+            break;
+        case 'other':
+            messageElement.classList.add('other-message');
+            break;
+    }
+    
     messageArea.appendChild(messageElement);
     messageArea.scrollTop = messageArea.scrollHeight;
 }
