@@ -210,10 +210,7 @@ function sendChatMessage() {
         addMessage(`${username}: ${message}`);
     }
 }
-
-socket.on('chat', (data) => {
-    // 显示所有消息，包括用户名
-    addMessage(`${data.username}: ${data.message}`);
+socket) => {
 });
 
 function addMessage(message) {
