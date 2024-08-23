@@ -1,84 +1,150 @@
-const express = require('express');
-const http = require('http');
-const socketIo = require('socket.io');
+const socket = io();
+let username = '';
+let room = '';
 
-const app = express();
-const server = http.createServer(app);
-const io = socketIo(server);
+const loginArea = document.getElementById('login-area');
+const roomArea = document.getElementById('room-area');
+const chatArea = document.getElementById('chat-area');
+const roomHeader = document.getElementById('room-header');
+const messageArea = document.getElementById('message-area');
+const chatInput = document.getElementById('chat-input');
+const sendChatButton = document.getElementById('send-chat');
 
-app.use(express.static('public'));
-
-const rooms = {};
-
-io.on('connection', (socket) => {
-    console.log('用户已连接，等待IP信息...');
-
-    socket.on('reportIP', (ip) => {
-        socket.publicIP = ip;
-        console.log(`用户公网IP地址: ${socket.publicIP}`);
+// 获取公网IP并发送给服务器
+fetch('https://api.ipify.org?format=json')
+    .then(response => response.json())
+    .then(data => {
+        socket.emit('reportIP', data.ip);
+    })
+    .catch(error => {
+        console.error('Error fetching IP:', error);
+        socket.emit('reportIP', 'Unknown');
     });
 
-    socket.on('login', (username) => {
-        socket.username = username;
-        console.log(`用户 ${username} 登录，公网IP地址: ${socket.publicIP}`);
-    });
-
-    socket.on('createRoom', (room) => {
-        if (!rooms[room]) {
-            rooms[room] = { players: [] };
-        }
-        joinRoom(socket, room);
-    });
-
-    socket.on('joinRoom', (room) => {
-        if (rooms[room]) {
-            joinRoom(socket, room);
-        } else {
-            socket.emit('roomNotFound');
-        }
-    });
-
-    function joinRoom(socket, room) {
-        socket.join(room);
-        if (!rooms[room].players.includes(socket.username)) {
-            rooms[room].players.push(socket.username);
-        }
-        socket.room = room;
-        io.to(room).emit('playerJoined', { username: socket.username, players: rooms[room].players });
-        socket.emit('joinedRoom', room);
-        console.log(`用户 ${socket.username} 加入房间 ${room}，公网IP地址: ${socket.publicIP}`);
+// 用户名输入和登录
+document.getElementById('login-btn').addEventListener('click', () => {
+    username = document.getElementById('username').value.trim();
+    if (username) {
+        socket.emit('login', username);
+        loginArea.style.display = 'none';
+        roomArea.style.display = 'flex';
+    } else {
+        alert('请输入用户名');
     }
-
-    socket.on('chat', (data) => {
-        io.to(data.room).emit('chat', {
-            username: data.username,
-            message: data.message
-        });
-    });
-
-    socket.on('disconnect', () => {
-        console.log(`用户已断开连接，公网IP地址: ${socket.publicIP}`);
-        if (socket.room && rooms[socket.room]) {
-            rooms[socket.room].players = rooms[socket.room].players.filter(player => player !== socket.username);
-            io.to(socket.room).emit('playerLeft', { username: socket.username, players: rooms[socket.room].players });
-            if (rooms[socket.room].players.length === 0) {
-                delete rooms[socket.room];
-            }
-        }
-    });
-
-    socket.on('rejoinRoom', (data) => {
-        if (rooms[data.room]) {
-            socket.username = data.username;
-            joinRoom(socket, data.room);
-            socket.emit('rejoinedRoom');
-        } else {
-            socket.emit('roomNotFound');
-        }
-    });
 });
 
-const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => {
-    console.log(`服务器运行在端口 ${PORT}`);
+// 创建房间
+document.getElementById('create-room').addEventListener('click', () => {
+    room = document.getElementById('room-name').value.trim();
+    if (room) {
+        socket.emit('createRoom', room);
+    } else {
+        alert('请输入房间名');
+    }
+});
+
+// 加入房间
+document.getElementById('join-room').addEventListener('click', () => {
+    room = document.getElementById('room-name').value.trim();
+    if (room) {
+        socket.emit('joinRoom', room);
+    } else {
+        alert('请输入房间名');
+    }
+});
+
+// 成功加入房间
+socket.on('joinedRoom', (joinedRoom) => {
+    room = joinedRoom;
+    roomArea.style.display = 'none';
+    chatArea.style.display = 'flex';
+    roomHeader.textContent = `房间: ${room}`;
+    addMessage('你加入了房间 ' + room, 'system');
+});
+
+// 新玩家加入
+socket.on('playerJoined', (data) => {
+    addMessage(`${data.username} 加入了房间`, 'system');
+    addMessage(`当前用户: ${data.players.join(', ')}`, 'system');
+});
+
+// 玩家离开
+socket.on('playerLeft', (data) => {
+    addMessage(`${data.username} 离开了房间`, 'system');
+    addMessage(`当前用户: ${data.players.join(', ')}`, 'system');
+});
+
+// 发送聊天消息
+sendChatButton.addEventListener('click', sendChatMessage);
+chatInput.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') {
+        sendChatMessage();
+    }
+});
+
+function sendChatMessage() {
+    const message = chatInput.value.trim();
+    if (message) {
+        socket.emit('chat', { room, username, message });
+        chatInput.value = '';
+        addMessage(message, 'user');
+    }
+}
+
+// 接收聊天消息
+socket.on('chat', (data) => {
+    if (data.username !== username) {
+        addMessage(`${data.username}: ${data.message}`, 'other');
+    }
+});
+
+// 添加消息到聊天区域
+function addMessage(message, type) {
+    const messageElement = document.createElement('div');
+    messageElement.classList.add('message');
+    
+    switch(type) {
+        case 'system':
+            messageElement.classList.add('system-message');
+            messageElement.textContent = message;
+            break;
+        case 'user':
+            messageElement.classList.add('user-message');
+            messageElement.textContent = `你: ${message}`;
+            break;
+        case 'other':
+            messageElement.classList.add('other-message');
+            messageElement.textContent = message;
+            break;
+    }
+    
+    messageArea.appendChild(messageElement);
+    messageArea.scrollTop = messageArea.scrollHeight;
+}
+
+// 房间不存在
+socket.on('roomNotFound', () => {
+    alert('房间不存在，请重新输入或创建新房间');
+});
+
+// 错误处理
+socket.on('error', (errorMessage) => {
+    alert('错误: ' + errorMessage);
+});
+
+// 断开连接
+socket.on('disconnect', () => {
+    addMessage('与服务器的连接已断开', 'system');
+});
+
+// 重新连接
+socket.on('reconnect', () => {
+    if (username && room) {
+        socket.emit('rejoinRoom', { username, room });
+    }
+});
+
+// 重新加入房间成功
+socket.on('rejoinedRoom', () => {
+    addMessage('重新连接成功', 'system');
 });
