@@ -8,15 +8,16 @@ body {
     margin: 0;
 }
 
-.chat-container {
+.container {
+    width: 400px;
+    height: 600px;
+}
+
+.rounded {
     background-color: white;
     border-radius: 15px;
     box-shadow: 0 0 10px rgba(0,0,0,0.1);
     padding: 20px;
-    width: 400px;
-    height: 600px;
-    display: flex;
-    flex-direction: column;
 }
 
 h1 {
@@ -59,15 +60,16 @@ button:hover {
     display: flex;
     flex-direction: column;
     height: 100%;
+    background-color: white;
 }
 
 #room-header {
-    background-color: #f0f0f0;
+    background-color: #4CAF50;
+    color: white;
     padding: 10px;
     text-align: center;
     font-weight: bold;
-    border-top-left-radius: 15px;
-    border-top-right-radius: 15px;
+    font-size: 18px;
 }
 
 #message-area {
@@ -75,12 +77,13 @@ button:hover {
     overflow-y: auto;
     padding: 10px;
     border: 1px solid #ddd;
-    margin-bottom: 10px;
 }
 
 #input-area {
     display: flex;
     gap: 10px;
+    padding: 10px;
+    background-color: #f0f0f0;
 }
 
 #chat-input {

@@ -38,17 +38,17 @@ socket.on('joinedRoom', (joinedRoom) => {
     roomArea.style.display = 'none';
     chatArea.style.display = 'flex';
     roomHeader.textContent = `房间: ${room}`;
-    addMessage('你加入了房间: ' + room);
+    addMessage('系统: 你加入了房间 ' + room);
 });
 
 socket.on('playerJoined', (data) => {
-    addMessage(`${data.username} 加入了房间`);
-    addMessage(`当前用户: ${data.players.join(', ')}`);
+    addMessage(`系统: ${data.username} 加入了房间`);
+    addMessage(`系统: 当前用户: ${data.players.join(', ')}`);
 });
 
 socket.on('playerLeft', (data) => {
-    addMessage(`${data.username} 离开了房间`);
-    addMessage(`当前用户: ${data.players.join(', ')}`);
+    addMessage(`系统: ${data.username} 离开了房间`);
+    addMessage(`系统: 当前用户: ${data.players.join(', ')}`);
 });
 
 sendChatButton.addEventListener('click', sendChatMessage);
