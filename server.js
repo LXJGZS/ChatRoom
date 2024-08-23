@@ -18,27 +18,35 @@ io.on('connection', (socket) => {
     });
 
     socket.on('createRoom', (room) => {
-        socket.join(room);
-        rooms[room] = { players: [socket.username], drawer: null, guesser: null, word: null };
-        socket.room = room;
+        if (!rooms[room]) {
+            rooms[room] = { players: [], drawer: null, guesser: null, word: null };
+        }
+        joinRoom(socket, room);
     });
 
     socket.on('joinRoom', (room) => {
         if (rooms[room]) {
-            socket.join(room);
-            rooms[room].players.push(socket.username);
-            socket.room = room;
-            socket.emit('gameState', 'waiting');
+            joinRoom(socket, room);
         } else {
             socket.emit('roomNotFound');
         }
     });
 
+    function joinRoom(socket, room) {
+        socket.join(room);
+        if (!rooms[room].players.includes(socket.username)) {
+            rooms[room].players.push(socket.username);
+        }
+        socket.room = room;
+        io.to(room).emit('playerJoined', { username: socket.username, players: rooms[room].players });
+        socket.emit('joinedRoom', room);
+    }
+
     socket.on('ready', (data) => {
         if (rooms[data.room]) {
-            if (data.isDrawer) {
+            if (data.isDrawer && !rooms[data.room].drawer) {
                 rooms[data.room].drawer = socket.username;
-            } else {
+            } else if (!data.isDrawer && !rooms[data.room].guesser) {
                 rooms[data.room].guesser = socket.username;
             }
             if (rooms[data.room].drawer && rooms[data.room].guesser) {
@@ -60,6 +68,7 @@ io.on('connection', (socket) => {
     socket.on('newWord', (data) => {
         if (rooms[data.room]) {
             rooms[data.room].word = data.word;
+            socket.to(data.room).emit('drawerReady');
         }
     });
 
@@ -74,8 +83,10 @@ io.on('connection', (socket) => {
             });
             if (correct) {
                 rooms[data.room].word = null;
+                rooms[data.room].drawer = null;
+                rooms[data.room].guesser = null;
                 setTimeout(() => {
-                    io.to(data.room).emit('gameState', 'start');
+                    io.to(data.room).emit('gameState', 'newRound');
                 }, 3000);
             }
         }
@@ -85,6 +96,7 @@ io.on('connection', (socket) => {
         console.log('A user disconnected');
         if (socket.room && rooms[socket.room]) {
             rooms[socket.room].players = rooms[socket.room].players.filter(player => player !== socket.username);
+            io.to(socket.room).emit('playerLeft', { username: socket.username, players: rooms[socket.room].players });
             if (rooms[socket.room].players.length === 0) {
                 delete rooms[socket.room];
             }

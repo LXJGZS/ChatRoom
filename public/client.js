@@ -12,6 +12,7 @@ const drawerControls = document.getElementById('drawer-controls');
 const guesserControls = document.getElementById('guesser-controls');
 const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext('2d');
+const messageArea = document.getElementById('message-area');
 
 document.getElementById('login-btn').addEventListener('click', () => {
     username = document.getElementById('username').value;
@@ -26,7 +27,6 @@ document.getElementById('create-room').addEventListener('click', () => {
     room = document.getElementById('room-name').value;
     if (room) {
         socket.emit('createRoom', room);
-        showRoleSelection();
     }
 });
 
@@ -37,10 +37,23 @@ document.getElementById('join-room').addEventListener('click', () => {
     }
 });
 
-function showRoleSelection() {
+socket.on('joinedRoom', (joinedRoom) => {
+    room = joinedRoom;
     roomArea.style.display = 'none';
     roleSelection.style.display = 'block';
-}
+});
+
+socket.on('playerJoined', (data) => {
+    messageArea.innerHTML += `<p>${data.username} 加入了房间</p>`;
+    messageArea.innerHTML += `<p>当前玩家: ${data.players.join(', ')}</p>`;
+    messageArea.scrollTop = messageArea.scrollHeight;
+});
+
+socket.on('playerLeft', (data) => {
+    messageArea.innerHTML += `<p>${data.username} 离开了房间</p>`;
+    messageArea.innerHTML += `<p>当前玩家: ${data.players.join(', ')}</p>`;
+    messageArea.scrollTop = messageArea.scrollHeight;
+});
 
 document.getElementById('choose-drawer').addEventListener('click', () => {
     isDrawer = true;
@@ -125,6 +138,13 @@ document.getElementById('submit-word').addEventListener('click', () => {
     if (currentWord) {
         socket.emit('newWord', { room, word: currentWord });
         document.getElementById('word-input').value = '';
+        messageArea.innerHTML += '<p>你已选择词语，等待猜词者...</p>';
+    }
+});
+
+socket.on('drawerReady', () => {
+    if (!isDrawer) {
+        messageArea.innerHTML += '<p>画家已准备好，你可以开始猜词了！</p>';
     }
 });
 
@@ -137,7 +157,6 @@ document.getElementById('submit-guess').addEventListener('click', () => {
 });
 
 socket.on('guessResult', (data) => {
-    const messageArea = document.getElementById('message-area');
     if (data.correct) {
         messageArea.innerHTML += `<p>恭喜 ${data.username} 猜对了！正确答案是：${data.word}</p>`;
         if (!isDrawer) {
@@ -153,7 +172,6 @@ socket.on('guessResult', (data) => {
 });
 
 socket.on('gameState', (state) => {
-    const messageArea = document.getElementById('message-area');
     if (state === 'waiting') {
         messageArea.innerHTML += '<p>等待其他玩家...</p>';
     } else if (state === 'start') {
@@ -163,6 +181,12 @@ socket.on('gameState', (state) => {
         } else {
             alert('等待画家绘画，准备猜词');
         }
+    } else if (state === 'newRound') {
+        messageArea.innerHTML += '<p>新一轮开始！请重新选择角色。</p>';
+        gameArea.style.display = 'none';
+        roleSelection.style.display = 'block';
+        drawerControls.style.display = 'none';
+        guesserControls.style.display = 'none';
     }
     messageArea.scrollTop = messageArea.scrollHeight;
 });
