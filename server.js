@@ -92,6 +92,14 @@ io.on('connection', (socket) => {
         }
     });
 
+    // 新增：处理聊天消息
+    socket.on('chat', (data) => {
+        io.to(data.room).emit('chat', {
+            username: data.username,
+            message: data.message
+        });
+    });
+
     socket.on('disconnect', () => {
         console.log('A user disconnected');
         if (socket.room && rooms[socket.room]) {

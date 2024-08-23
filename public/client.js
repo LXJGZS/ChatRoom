@@ -193,7 +193,7 @@ socket.on('roomNotFound', () => {
     alert('无此房间，请重新输入或创建新房间');
 });
 
-// 新增：聊天功能
+// 优化聊天功能
 sendChatButton.addEventListener('click', sendChatMessage);
 chatInput.addEventListener('keypress', (e) => {
     if (e.key === 'Enter') {
@@ -206,11 +206,16 @@ function sendChatMessage() {
     if (message) {
         socket.emit('chat', { room, username, message });
         chatInput.value = '';
+        // 立即在本地显示消息
+        addMessage(`<${username}>: ${message}`);
     }
 }
 
 socket.on('chat', (data) => {
-    addMessage(`<${data.username}>: ${data.message}`);
+    // 只显示来自其他用户的消息
+    if (data.username !== username) {
+        addMessage(`<${data.username}>: ${data.message}`);
+    }
 });
 
 function addMessage(message) {
