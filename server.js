@@ -11,10 +11,12 @@ app.use(express.static('public'));
 const rooms = {};
 
 io.on('connection', (socket) => {
-    console.log('用户已连接');
+    const clientIp = socket.request.connection.remoteAddress;
+    console.log(`用户已连接，IP地址: ${clientIp}`);
 
     socket.on('login', (username) => {
         socket.username = username;
+        console.log(`用户 ${username} 登录，IP地址: ${clientIp}`);
     });
 
     socket.on('createRoom', (room) => {
@@ -40,6 +42,7 @@ io.on('connection', (socket) => {
         socket.room = room;
         io.to(room).emit('playerJoined', { username: socket.username, players: rooms[room].players });
         socket.emit('joinedRoom', room);
+        console.log(`用户 ${socket.username} 加入房间 ${room}，IP地址: ${clientIp}`);
     }
 
     socket.on('chat', (data) => {
@@ -50,7 +53,7 @@ io.on('connection', (socket) => {
     });
 
     socket.on('disconnect', () => {
-        console.log('用户已断开连接');
+        console.log(`用户已断开连接，IP地址: ${clientIp}`);
         if (socket.room && rooms[socket.room]) {
             rooms[socket.room].players = rooms[socket.room].players.filter(player => player !== socket.username);
             io.to(socket.room).emit('playerLeft', { username: socket.username, players: rooms[socket.room].players });
