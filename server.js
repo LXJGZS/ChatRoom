@@ -28,6 +28,9 @@ io.on('connection', (socket) => {
             socket.join(room);
             rooms[room].players.push(socket.username);
             socket.room = room;
+            socket.emit('gameState', 'waiting');
+        } else {
+            socket.emit('roomNotFound');
         }
     });
 

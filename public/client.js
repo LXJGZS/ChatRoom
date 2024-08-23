@@ -1,5 +1,4 @@
 const socket = io();
-
 let username = '';
 let room = '';
 let isDrawer = false;
@@ -35,7 +34,6 @@ document.getElementById('join-room').addEventListener('click', () => {
     room = document.getElementById('room-name').value;
     if (room) {
         socket.emit('joinRoom', room);
-        showRoleSelection();
     }
 });
 
@@ -58,10 +56,10 @@ function startGame() {
     roleSelection.style.display = 'none';
     gameArea.style.display = 'block';
     if (isDrawer) {
-        drawerControls.style.display = 'block';
+        drawerControls.style.display = 'flex';
         initCanvas();
     } else {
-        guesserControls.style.display = 'block';
+        guesserControls.style.display = 'flex';
     }
     socket.emit('ready', { room, isDrawer });
 }
@@ -141,28 +139,34 @@ document.getElementById('submit-guess').addEventListener('click', () => {
 socket.on('guessResult', (data) => {
     const messageArea = document.getElementById('message-area');
     if (data.correct) {
-        messageArea.innerHTML = `恭喜 ${data.username} 猜对了！正确答案是：${data.word}`;
+        messageArea.innerHTML += `<p>恭喜 ${data.username} 猜对了！正确答案是：${data.word}</p>`;
         if (!isDrawer) {
             alert('你猜对了！');
         }
         setTimeout(() => {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            messageArea.innerHTML = '';
         }, 3000);
     } else {
-        messageArea.innerHTML = `${data.username} 猜测: ${data.guess} - 不正确`;
+        messageArea.innerHTML += `<p>${data.username} 猜测: ${data.guess} - 不正确</p>`;
     }
+    messageArea.scrollTop = messageArea.scrollHeight;
 });
 
 socket.on('gameState', (state) => {
+    const messageArea = document.getElementById('message-area');
     if (state === 'waiting') {
-        document.getElementById('message-area').innerHTML = '等待其他玩家...';
+        messageArea.innerHTML += '<p>等待其他玩家...</p>';
     } else if (state === 'start') {
-        document.getElementById('message-area').innerHTML = '游戏开始！';
+        messageArea.innerHTML += '<p>游戏开始！</p>';
         if (isDrawer) {
             alert('请输入一个词语并开始绘画');
         } else {
             alert('等待画家绘画，准备猜词');
         }
     }
+    messageArea.scrollTop = messageArea.scrollHeight;
+});
+
+socket.on('roomNotFound', () => {
+    alert('无此房间，请重新输入或创建新房间');
 });

@@ -14,44 +14,70 @@ body {
     box-shadow: 0 0 10px rgba(0,0,0,0.1);
     padding: 20px;
     width: 800px;
+    text-align: center;
 }
 
 h1 {
-    text-align: center;
     color: #333;
+    margin-bottom: 30px;
+}
+
+.centered-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 20px;
 }
 
 input, button, select {
     padding: 10px;
     border-radius: 5px;
     border: 1px solid #ddd;
-    margin: 5px;
+    font-size: 16px;
+    width: 200px;
 }
 
 button {
-    background-color: #4CAF50;
+    background-color: #5ac285;
     color: white;
     border: none;
     cursor: pointer;
+    transition: background-color 0.3s;
 }
 
 button:hover {
-    background-color: #45a049;
+    background-color: #5ac285;
 }
 
 #canvas {
     border: 2px solid #ddd;
     border-radius: 10px;
+    margin-bottom: 20px;
 }
 
-#chat-area {
+#drawer-controls, #guesser-controls {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+#message-area {
     margin-top: 20px;
     border: 1px solid #ddd;
     padding: 10px;
-    height: 200px;
+    height: 100px;
     overflow-y: scroll;
+    text-align: left;
 }
 
-#messages {
-    margin-bottom: 10px;
+#color-picker {
+    width: 50px;
+    height: 50px;
+    padding: 0;
+}
+
+#brush-size {
+    width: 100px;
 }

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,42 +9,43 @@
 <body>
     <div class="game-container">
         <h1>你画我猜游戏</h1>
-        <div id="login-area">
+
+        <div id="login-area" class="centered-content">
             <input type="text" id="username" placeholder="输入用户名">
             <button id="login-btn">登录</button>
         </div>
-        <div id="room-area" style="display:none;">
-            <input type="text" id="room-name" placeholder="输入房间名">
+
+        <div id="room-area" class="centered-content" style="display:none;">
+            <input type="text" id="room-name" placeholder="房间名称">
             <button id="create-room">创建房间</button>
             <button id="join-room">加入房间</button>
         </div>
-        <div id="role-selection" style="display:none;">
+
+        <div id="role-selection" class="centered-content" style="display:none;">
             <button id="choose-drawer">我来画</button>
             <button id="choose-guesser">我来猜</button>
         </div>
+
         <div id="game-area" style="display:none;">
+            <canvas id="canvas" width="600" height="400"></canvas>
+
             <div id="drawer-controls" style="display:none;">
-                <input type="text" id="word-input" placeholder="输入要画的词语">
+                <input type="color" id="color-picker">
+                <input type="range" id="brush-size" min="1" max="20" value="5">
+                <button id="clear-canvas">清空画布</button>
+                <input type="text" id="word-input" placeholder="输入要画的词">
                 <button id="submit-word">确定</button>
-                <div class="game-controls">
-                    <select id="color-picker">
-                        <option value="black">黑色</option>
-                        <option value="red">红色</option>
-                        <option value="blue">蓝色</option>
-                        <option value="green">绿色</option>
-                    </select>
-                    <input type="range" id="brush-size" min="1" max="20" value="5">
-                    <button id="clear-canvas">清空画布</button>
-                </div>
             </div>
+
             <div id="guesser-controls" style="display:none;">
                 <input type="text" id="guess-input" placeholder="输入你的猜测">
                 <button id="submit-guess">提交猜测</button>
             </div>
-            <canvas id="canvas" width="760" height="400"></canvas>
+
             <div id="message-area"></div>
         </div>
     </div>
+
     <script src="/socket.io/socket.io.js"></script>
     <script src="client.js"></script>
 </body>
