@@ -3,7 +3,13 @@ body, html {
     margin: 0;
     padding: 0;
     height: 100%;
-    overflow: hidden;
+}
+
+.container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
 }
 
 .centered-content {
@@ -11,7 +17,6 @@ body, html {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    height: 100%;
     gap: 15px;
 }
 
@@ -20,9 +25,7 @@ body, html {
     border-radius: 15px;
     box-shadow: 0 0 10px rgba(0,0,0,0.1);
     padding: 20px;
-    max-width: 400px;
-    width: 90%;
-    box-sizing: border-box;
+    width: 300px;
 }
 
 h1 {
@@ -57,6 +60,9 @@ button:hover {
     flex-direction: column;
     height: 100vh;
     width: 100vw;
+    position: fixed;
+    top: 0;
+    left: 0;
 }
 
 #room-header {
@@ -90,7 +96,6 @@ button:hover {
     width: 80px;
 }
 
-/* 消息样式 */
 .message {
     margin-bottom: 10px;
     padding: 8px 12px;

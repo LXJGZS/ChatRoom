@@ -2,6 +2,7 @@ const socket = io();
 let username = '';
 let room = '';
 
+const container = document.querySelector('.container');
 const loginArea = document.getElementById('login-area');
 const roomArea = document.getElementById('room-area');
 const chatArea = document.getElementById('chat-area');
@@ -35,7 +36,7 @@ document.getElementById('join-room').addEventListener('click', () => {
 
 socket.on('joinedRoom', (joinedRoom) => {
     room = joinedRoom;
-    roomArea.style.display = 'none';
+    container.style.display = 'none';
     chatArea.style.display = 'flex';
     roomHeader.textContent = `房间: ${room}`;
     addMessage('你加入了房间 ' + room, 'system');
