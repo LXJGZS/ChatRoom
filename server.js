@@ -11,12 +11,16 @@ app.use(express.static('public'));
 const rooms = {};
 
 io.on('connection', (socket) => {
-    const clientIp = socket.request.connection.remoteAddress;
-    console.log(`用户已连接，IP地址: ${clientIp}`);
+    console.log('用户已连接，等待IP信息...');
+
+    socket.on('reportIP', (ip) => {
+        socket.publicIP = ip;
+        console.log(`用户公网IP地址: ${socket.publicIP}`);
+    });
 
     socket.on('login', (username) => {
         socket.username = username;
-        console.log(`用户 ${username} 登录，IP地址: ${clientIp}`);
+        console.log(`用户 ${username} 登录，公网IP地址: ${socket.publicIP}`);
     });
 
     socket.on('createRoom', (room) => {
@@ -42,7 +46,7 @@ io.on('connection', (socket) => {
         socket.room = room;
         io.to(room).emit('playerJoined', { username: socket.username, players: rooms[room].players });
         socket.emit('joinedRoom', room);
-        console.log(`用户 ${socket.username} 加入房间 ${room}，IP地址: ${clientIp}`);
+        console.log(`用户 ${socket.username} 加入房间 ${room}，公网IP地址: ${socket.publicIP}`);
     }
 
     socket.on('chat', (data) => {
@@ -53,7 +57,7 @@ io.on('connection', (socket) => {
     });
 
     socket.on('disconnect', () => {
-        console.log(`用户已断开连接，IP地址: ${clientIp}`);
+        console.log(`用户已断开连接，公网IP地址: ${socket.publicIP}`);
         if (socket.room && rooms[socket.room]) {
             rooms[socket.room].players = rooms[socket.room].players.filter(player => player !== socket.username);
             io.to(socket.room).emit('playerLeft', { username: socket.username, players: rooms[socket.room].players });
@@ -62,7 +66,19 @@ io.on('connection', (socket) => {
             }
         }
     });
+
+    socket.on('rejoinRoom', (data) => {
+        if (rooms[data.room]) {
+            socket.username = data.username;
+            joinRoom(socket, data.room);
+            socket.emit('rejoinedRoom');
+        } else {
+            socket.emit('roomNotFound');
+        }
+    });
 });
 
 const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => console.log(`服务器运行在端口 ${PORT}`));
+server.listen(PORT, () => {
+    console.log(`服务器运行在端口 ${PORT}`);
+});

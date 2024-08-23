@@ -10,6 +10,17 @@ const messageArea = document.getElementById('message-area');
 const chatInput = document.getElementById('chat-input');
 const sendChatButton = document.getElementById('send-chat');
 
+// 获取公网IP并发送给服务器
+fetch('https://api.ipify.org?format=json')
+    .then(response => response.json())
+    .then(data => {
+        socket.emit('reportIP', data.ip);
+    })
+    .catch(error => {
+        console.error('Error fetching IP:', error);
+        socket.emit('reportIP', 'Unknown');
+    });
+
 // 用户名输入和登录
 document.getElementById('login-btn').addEventListener('click', () => {
     username = document.getElementById('username').value.trim();
