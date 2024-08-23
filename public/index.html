@@ -8,20 +8,21 @@
 </head>
 <body>
     <div class="chat-container">
-        <h1>聊天室</h1>
-
         <div id="login-area" class="centered-content">
+            <h1>聊天室</h1>
             <input type="text" id="username" placeholder="输入你的用户名">
             <button id="login-btn">进入</button>
         </div>
 
         <div id="room-area" class="centered-content" style="display:none;">
+            <h1>选择房间</h1>
             <input type="text" id="room-name" placeholder="输入房间名">
             <button id="create-room">创建房间</button>
             <button id="join-room">加入房间</button>
         </div>
 
         <div id="chat-area" style="display:none;">
+            <div id="room-header"></div>
             <div id="message-area"></div>
             <div id="input-area">
                 <input type="text" id="chat-input" placeholder="输入你的消息...">
