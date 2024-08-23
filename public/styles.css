@@ -55,6 +55,14 @@ button:hover {
     background-color: #45a049;
 }
 
+#room-area {
+    display: none;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
 #chat-area {
     display: none;
     flex-direction: column;
