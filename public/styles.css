@@ -39,7 +39,7 @@ input, button, select {
 }
 
 button {
-    background-color: #5ac285;
+    background-color: #4CAF50;
     color: white;
     border: none;
     cursor: pointer;
@@ -47,7 +47,7 @@ button {
 }
 
 button:hover {
-    background-color: #5ac285;
+    background-color: #45a049;
 }
 
 #canvas {
@@ -95,4 +95,13 @@ button:hover {
 
 #brush-size {
     width: 100px;
+}
+
+/* 新增：确保房间选择区域的布局正确 */
+#room-area input {
+    margin-bottom: 10px;
+}
+
+#room-area button {
+    margin-top: 5px;
 }
