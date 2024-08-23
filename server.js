@@ -11,7 +11,7 @@ app.use(express.static('public'));
 const rooms = {};
 
 io.on('connection', (socket) => {
-    console.log('A user connected');
+    console.log('用户已连接');
 
     socket.on('login', (username) => {
         socket.username = username;
@@ -19,7 +19,7 @@ io.on('connection', (socket) => {
 
     socket.on('createRoom', (room) => {
         if (!rooms[room]) {
-            rooms[room] = { players: [], drawer: null, guesser: null, word: null };
+            rooms[room] = { players: [] };
         }
         joinRoom(socket, room);
     });
@@ -42,57 +42,6 @@ io.on('connection', (socket) => {
         socket.emit('joinedRoom', room);
     }
 
-    socket.on('ready', (data) => {
-        if (rooms[data.room]) {
-            if (data.isDrawer && !rooms[data.room].drawer) {
-                rooms[data.room].drawer = socket.username;
-            } else if (!data.isDrawer && !rooms[data.room].guesser) {
-                rooms[data.room].guesser = socket.username;
-            }
-            if (rooms[data.room].drawer && rooms[data.room].guesser) {
-                io.to(data.room).emit('gameState', 'start');
-            } else {
-                socket.emit('gameState', 'waiting');
-            }
-        }
-    });
-
-    socket.on('draw', (data) => {
-        socket.to(data.room).emit('draw', data);
-    });
-
-    socket.on('clearCanvas', (room) => {
-        socket.to(room).emit('clearCanvas');
-    });
-
-    socket.on('newWord', (data) => {
-        if (rooms[data.room]) {
-            rooms[data.room].word = data.word;
-            socket.to(data.room).emit('drawerReady');
-        }
-    });
-
-    socket.on('guess', (data) => {
-        if (rooms[data.room] && rooms[data.room].word) {
-            const correct = data.guess.toLowerCase() === rooms[data.room].word.toLowerCase();
-            io.to(data.room).emit('guessResult', {
-                username: data.username,
-                guess: data.guess,
-                correct: correct,
-                word: correct ? rooms[data.room].word : null
-            });
-            if (correct) {
-                rooms[data.room].word = null;
-                rooms[data.room].drawer = null;
-                rooms[data.room].guesser = null;
-                setTimeout(() => {
-                    io.to(data.room).emit('gameState', 'newRound');
-                }, 3000);
-            }
-        }
-    });
-
-    // 新增：处理聊天消息
     socket.on('chat', (data) => {
         io.to(data.room).emit('chat', {
             username: data.username,
@@ -101,7 +50,7 @@ io.on('connection', (socket) => {
     });
 
     socket.on('disconnect', () => {
-        console.log('A user disconnected');
+        console.log('用户已断开连接');
         if (socket.room && rooms[socket.room]) {
             rooms[socket.room].players = rooms[socket.room].players.filter(player => player !== socket.username);
             io.to(socket.room).emit('playerLeft', { username: socket.username, players: rooms[socket.room].players });
@@ -113,4 +62,4 @@ io.on('connection', (socket) => {
 });
 
 const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+server.listen(PORT, () => console.log(`服务器运行在端口 ${PORT}`));
