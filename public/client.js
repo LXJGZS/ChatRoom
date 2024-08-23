@@ -13,6 +13,8 @@ const guesserControls = document.getElementById('guesser-controls');
 const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext('2d');
 const messageArea = document.getElementById('message-area');
+const chatInput = document.getElementById('chat-input');
+const sendChatButton = document.getElementById('send-chat');
 
 document.getElementById('login-btn').addEventListener('click', () => {
     username = document.getElementById('username').value;
@@ -44,15 +46,13 @@ socket.on('joinedRoom', (joinedRoom) => {
 });
 
 socket.on('playerJoined', (data) => {
-    messageArea.innerHTML += `<p>${data.username} 加入了房间</p>`;
-    messageArea.innerHTML += `<p>当前玩家: ${data.players.join(', ')}</p>`;
-    messageArea.scrollTop = messageArea.scrollHeight;
+    addMessage(`${data.username} 加入了房间`);
+    addMessage(`当前玩家: ${data.players.join(', ')}`);
 });
 
 socket.on('playerLeft', (data) => {
-    messageArea.innerHTML += `<p>${data.username} 离开了房间</p>`;
-    messageArea.innerHTML += `<p>当前玩家: ${data.players.join(', ')}</p>`;
-    messageArea.scrollTop = messageArea.scrollHeight;
+    addMessage(`${data.username} 离开了房间`);
+    addMessage(`当前玩家: ${data.players.join(', ')}`);
 });
 
 document.getElementById('choose-drawer').addEventListener('click', () => {
@@ -138,13 +138,13 @@ document.getElementById('submit-word').addEventListener('click', () => {
     if (currentWord) {
         socket.emit('newWord', { room, word: currentWord });
         document.getElementById('word-input').value = '';
-        messageArea.innerHTML += '<p>你已选择词语，等待猜词者...</p>';
+        addMessage('你已选择词语，等待猜词者...');
     }
 });
 
 socket.on('drawerReady', () => {
     if (!isDrawer) {
-        messageArea.innerHTML += '<p>画家已准备好，你可以开始猜词了！</p>';
+        addMessage('画家已准备好，你可以开始猜词了！');
     }
 });
 
@@ -158,7 +158,7 @@ document.getElementById('submit-guess').addEventListener('click', () => {
 
 socket.on('guessResult', (data) => {
     if (data.correct) {
-        messageArea.innerHTML += `<p>恭喜 ${data.username} 猜对了！正确答案是：${data.word}</p>`;
+        addMessage(`恭喜 ${data.username} 猜对了！正确答案是：${data.word}`);
         if (!isDrawer) {
             alert('你猜对了！');
         }
@@ -166,31 +166,56 @@ socket.on('guessResult', (data) => {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
         }, 3000);
     } else {
-        messageArea.innerHTML += `<p>${data.username} 猜测: ${data.guess} - 不正确</p>`;
+        addMessage(`${data.username} 猜测: ${data.guess} - 不正确`);
     }
-    messageArea.scrollTop = messageArea.scrollHeight;
 });
 
 socket.on('gameState', (state) => {
     if (state === 'waiting') {
-        messageArea.innerHTML += '<p>等待其他玩家...</p>';
+        addMessage('等待其他玩家...');
     } else if (state === 'start') {
-        messageArea.innerHTML += '<p>游戏开始！</p>';
+        addMessage('游戏开始！');
         if (isDrawer) {
             alert('请输入一个词语并开始绘画');
         } else {
             alert('等待画家绘画，准备猜词');
         }
     } else if (state === 'newRound') {
-        messageArea.innerHTML += '<p>新一轮开始！请重新选择角色。</p>';
+        addMessage('新一轮开始！请重新选择角色。');
         gameArea.style.display = 'none';
         roleSelection.style.display = 'block';
         drawerControls.style.display = 'none';
         guesserControls.style.display = 'none';
     }
-    messageArea.scrollTop = messageArea.scrollHeight;
 });
 
 socket.on('roomNotFound', () => {
     alert('无此房间，请重新输入或创建新房间');
 });
+
+// 新增：聊天功能
+sendChatButton.addEventListener('click', sendChatMessage);
+chatInput.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') {
+        sendChatMessage();
+    }
+});
+
+function sendChatMessage() {
+    const message = chatInput.value.trim();
+    if (message) {
+        socket.emit('chat', { room, username, message });
+        chatInput.value = '';
+    }
+}
+
+socket.on('chat', (data) => {
+    addMessage(`<${data.username}>: ${data.message}`);
+});
+
+function addMessage(message) {
+    const messageElement = document.createElement('p');
+    messageElement.innerHTML = message;
+    messageArea.appendChild(messageElement);
+    messageArea.scrollTop = messageArea.scrollHeight;
+}

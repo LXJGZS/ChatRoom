@@ -67,9 +67,24 @@ button:hover {
     margin-top: 20px;
     border: 1px solid #ddd;
     padding: 10px;
-    height: 100px;
+    height: 150px;
     overflow-y: scroll;
     text-align: left;
+}
+
+#chat-area {
+    margin-top: 20px;
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+}
+
+#chat-input {
+    width: 70%;
+}
+
+#send-chat {
+    width: 20%;
 }
 
 #color-picker {
