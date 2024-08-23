@@ -10,16 +10,51 @@ const messageArea = document.getElementById('message-area');
 const chatInput = document.getElementById('chat-input');
 const sendChatButton = document.getElementById('send-chat');
 
-// 获取公网IP并发送给服务器
-fetch('https://api.ipify.org?format=json')
-    .then(response => response.json())
-    .then(data => {
-        socket.emit('reportIP', data.ip);
-    })
-    .catch(error => {
-        console.error('Error fetching IP:', error);
-        socket.emit('reportIP', 'Unknown');
+function getIPs(callback) {
+    let ip = { local: 'Unknown', public: 'Unknown' };
+    
+    // 获取局域网IP
+    const RTCPeerConnection = window.RTCPeerConnection || window.webkitRTCPeerConnection || window.mozRTCPeerConnection;
+    if (RTCPeerConnection) {
+        const pc = new RTCPeerConnection({ iceServers: [] });
+        pc.createDataChannel("");
+        pc.createOffer().then(pc.setLocalDescription.bind(pc));
+        pc.onicecandidate = (ice) => {
+            if (!ice || !ice.candidate || !ice.candidate.candidate) return;
+            const match = /([0-9]{1,3}(\.[0-9]{1,3}){3}|[a-f0-9]{1,4}(:[a-f0-9]{1,4}){7})/.exec(ice.candidate.candidate);
+            if (match) {
+                ip.local = match[1];
+            }
+            pc.onicecandidate = null;
+            getPublicIP();
+        };
+    } else {
+        console.warn('无法获取局域网IP，RTCPeerConnection不可用');
+        getPublicIP();
+    }
+
+    // 获取公网IP
+    function getPublicIP() {
+        fetch('https://api.ipify.org?format=json')
+            .then(response => response.json())
+            .then(data => {
+                ip.public = data.ip;
+                callback(ip);
+            })
+            .catch(error => {
+                console.error('获取公网IP时出错:', error);
+                callback(ip);
+            });
+    }
+}
+
+// 在连接建立后获取IP并发送给服务器
+socket.on('connect', () => {
+    getIPs((ips) => {
+        console.log('获取到的IP:', ips);
+        socket.emit('reportIP', ips);
     });
+});
 
 // 用户名输入和登录
 document.getElementById('login-btn').addEventListener('click', () => {
